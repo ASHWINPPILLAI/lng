@@ -1,42 +1,176 @@
 # Automated Design and Deployment of a Smart LPG Management System using DevOps Orchestration
 
-## 1. Project Overview
-The Smart LPG Management System is a full-stack, cloud-native application designed to digitize and automate the tracking of household gas consumption. The project solves a real-world logistics problem by providing users with real-time analytics on their gas usage, calculating average daily consumption, and predicting the next refill date using predictive logic.
+## Project Overview
+A full-stack cloud-native application that digitizes and automates household LPG gas consumption tracking, built and deployed using a complete DevOps toolchain.
 
-What sets this project apart is not just the application itself, but the automated infrastructure behind it. The entire lifecycle—from writing code to provisioning servers and deploying the app—is managed through a modern DevOps toolchain.
+## Architecture
 
-## 2. Technical Architecture
-The project is built using a Modular DevOps Architecture, ensuring that the application is decoupled from the underlying infrastructure.
+```
+Developer Machine
+      │
+      │  git push
+      ▼
+┌─────────────────┐
+│   GitHub        │  ← Version Control (CO2)
+│  (master branch)│
+└────────┬────────┘
+         │ triggers
+         ▼
+┌─────────────────┐
+│ GitHub Actions  │  ← CI/CD Pipeline (CO3)
+│   CI/CD Pipeline│
+│  1. Build Image │
+│  2. Push to Hub │
+│  3. SSH Deploy  │
+└────────┬────────┘
+         │ pushes image
+         ▼
+┌─────────────────┐       ┌──────────────────────┐
+│   Docker Hub    │       │  Ansible Playbook     │  ← IaC (CO5)
+│ (Image Registry)│       │  provision_swarm.yml  │
+└────────┬────────┘       │  - Install Docker     │
+         │                │  - Init Swarm         │
+         │ pulls image    │  - Deploy Stack       │
+         ▼                └──────────────────────┘
+┌─────────────────┐
+│  Docker Swarm   │  ← Container Orchestration (CO5)
+│  (Production)   │
+│  - 2 Replicas   │
+│  - Rolling Update│
+│  - Auto Rollback│
+│  - Health Checks│
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐     ┌──────────────────────┐
+│  Node.js/Express│────▶│  MongoDB Atlas        │
+│  Backend API    │     │  (NoSQL Cloud DB)     │
+└────────┬────────┘     └──────────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ HTML/CSS/JS     │
+│ Frontend        │
+│ Dashboard       │
+└─────────────────┘
+```
 
-- **Frontend:** A responsive, data-driven dashboard built with Tailwind CSS and Vanilla JavaScript, providing high-performance visualization of usage trends.
-- **Backend:** A robust Node.js and Express server that handles complex date-based calculations and API orchestration.
-- **Database:** A cloud-hosted NoSQL (MongoDB Atlas) database used for high-availability storage of gas usage and refill history.
-- **Containerization:** The application is fully packaged into a Docker image, ensuring that it runs identically on a developer's laptop and a production cloud server.
+## Tech Stack
 
-## 3. DevOps Implementation
-To satisfy the evaluation rubrics, the project implements four core DevOps pillars:
+| Layer | Technology |
+|-------|-----------|
+| Frontend | HTML5, Tailwind CSS, Vanilla JavaScript |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas (NoSQL) |
+| Containerization | Docker |
+| Registry | Docker Hub |
+| Orchestration | Docker Swarm |
+| IaC | Ansible |
+| CI/CD | GitHub Actions |
+| Version Control | Git & GitHub |
 
-### A. Version Control
-Managed via Git and GitHub, utilizing a master-branch workflow. This allows for organized collaboration, rollback capabilities, and a clear audit trail of all architectural changes.
+## DevOps Pillars
 
-### B. Infrastructure as Code - IaC
-Manual cloud configuration is replaced by Ansible. An Ansible playbook programmatically provisions the Google Cloud environment, including the Artifact Registry and the Kubernetes cluster, making the entire infrastructure reproducible and scalable.
+### A. Version Control (CO2)
+Git + GitHub with master-branch workflow. Full audit trail, rollback capabilities, and organized commit history.
 
-### C. Container Orchestration
-The application is deployed on Google Kubernetes Engine (GKE). By using Kubernetes, the system benefits from automated scaling, self-healing (restarting crashed containers), and zero-downtime updates through LoadBalancer services.
+### B. Infrastructure as Code — IaC (CO5)
+`ansible/provision_swarm.yml` automates the entire server setup:
+- Installs Docker Engine
+- Initializes Docker Swarm
+- Deploys the application stack
 
-### D. CI/CD Pipeline
-A fully automated pipeline is implemented using GitHub Actions. Every time code is pushed to the repository, the pipeline automatically:
-- Builds a new Docker image.
-- Authenticates with Google Cloud.
-- Pushes the image to the registry.
-- Triggers a rolling update to the Kubernetes cluster.
+### C. Container Orchestration (CO5)
+Docker Swarm manages the production deployment:
+- **2 replicas** for high availability
+- **Rolling updates** — zero downtime on every deploy
+- **Auto-rollback** if a new deployment fails health checks
+- **Restart policies** for self-healing containers
 
-## 4. Key Features
-- **Real-time Consumption Tracking:** Users can log daily gas weight to see immediate trends.
-- **Predictive Analytics:** The system calculates the estimated remaining days of gas based on historical average usage.
-- **Automated Deployment:** No manual server login is required; code goes from "Commit" to "Live" in minutes.
-- **Cloud-Native Security:** Sensitive database credentials are managed via Environment Variables and Kubernetes Secrets, ensuring no passwords are exposed in the source code.
+### D. CI/CD Pipeline (CO3)
+GitHub Actions workflow (`.github/workflows/deploy.yml`):
+1. Triggered on every `git push` to master
+2. Builds Docker image
+3. Pushes to Docker Hub (`:latest` + `:<git-sha>` tags)
+4. SSHes into Swarm manager
+5. Runs `docker stack deploy` with rolling update
 
-## 5. Summary for Evaluators
-This project demonstrates a complete mastery of the DevOps Lifecycle. It moves beyond simple "web development" into Platform Engineering, showing how a modern software engineer can manage high-scale applications using automation, containerization, and cloud orchestration.
+## Local Setup
+
+### Prerequisites
+- [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
+- Node.js 18+
+- Git
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/ASHWINPPILLAI/lng.git
+cd lng
+```
+
+### 2. Configure environment
+```bash
+cp .env.example .env
+# Edit .env and set your MONGO_URI
+```
+
+### 3. Run with Docker Compose (local dev)
+```bash
+docker-compose up --build
+```
+App available at: http://localhost:3000
+
+### 4. Run with Docker Swarm (production mode)
+```bash
+docker swarm init
+docker build -t lpg-app:latest .
+docker stack deploy --compose-file docker-stack.yml lpg-stack
+docker service ls
+```
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `MONGO_URI` | MongoDB Atlas connection string | ✅ Yes |
+| `PORT` | Server port (default: 3000) | Optional |
+| `NODE_ENV` | Environment (production/development) | Optional |
+
+## GitHub Secrets Required for CI/CD
+
+| Secret | Description |
+|--------|-------------|
+| `DOCKERHUB_USERNAME` | Docker Hub account username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+| `SWARM_HOST` | IP address of Swarm manager server |
+| `SWARM_USER` | SSH username of the server |
+| `SWARM_SSH_KEY` | SSH private key for the server |
+| `MONGO_URI` | MongoDB Atlas connection string |
+
+## Project Structure
+
+```
+smart-lpg-management/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Actions CI/CD pipeline
+├── ansible/
+│   ├── provision_swarm.yml     # Ansible IaC playbook
+│   └── inventory.ini           # Ansible server inventory
+├── public/
+│   ├── index.html              # Frontend dashboard
+│   └── app.js                  # Frontend JavaScript
+├── docker-compose.yml          # Local development
+├── docker-stack.yml            # Docker Swarm production stack
+├── Dockerfile                  # Container build instructions
+├── server.js                   # Node.js/Express backend
+├── package.json
+└── .env                        # Environment variables (not committed)
+```
+
+## Key Features
+- **Real-time Consumption Tracking** — Log daily gas weight and see trends
+- **Predictive Analytics** — Estimates next refill date from average usage
+- **Automated Deployment** — Code → Docker Hub → Live in minutes
+- **Cloud-Native Security** — Credentials in environment variables, never in code
+- **Self-Healing** — Docker Swarm restarts crashed containers automatically

@@ -1,27 +1,23 @@
 ---
-# ============================================================
-# Ansible Playbook: Provision Docker Swarm Environment
-# Automates: Docker install → Swarm init → Stack deploy
-# Run with: ansible-playbook ansible/provision_swarm.yml -i inventory.ini
-# ============================================================
-- name: Provision Docker Swarm for Smart LPG App
+# ================================================================
+# Ansible Playbook: Provision Docker Swarm for Smart LPG App
+# Usage: ansible-playbook ansible/provision_swarm.yml -i ansible/inventory.ini
+# ================================================================
+- name: Provision Docker Swarm Environment
   hosts: swarm_manager
   become: true
+
   vars:
     dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
-    image_name: "{{ dockerhub_username }}/lpg-app"
+    mongo_uri: "{{ lookup('env', 'MONGO_URI') }}"
     stack_name: "lpg-stack"
-    app_port: 3000
+    image_name: "{{ dockerhub_username }}/lpg-app:latest"
 
   tasks:
-    # ── Install Docker ────────────────────────────────────────────────────
-    - name: 1. Install required packages
+    # ── Install Docker ─────────────────────────────────────────────────────
+    - name: 1. Install prerequisites
       apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
+        name: [apt-transport-https, ca-certificates, curl, gnupg]
         state: present
         update_cache: true
 
@@ -41,14 +37,14 @@
         state: present
         update_cache: true
 
-    - name: 5. Start and enable Docker service
+    - name: 5. Start and enable Docker
       service:
         name: docker
         state: started
         enabled: true
 
     # ── Initialise Docker Swarm ───────────────────────────────────────────
-    - name: 6. Initialize Docker Swarm (if not already active)
+    - name: 6. Initialize Docker Swarm
       command: docker swarm init
       register: swarm_init
       failed_when:
@@ -56,21 +52,17 @@
         - "'already part of a swarm' not in swarm_init.stderr"
       changed_when: "'already part of a swarm' not in swarm_init.stderr"
 
-    - name: Print Swarm status
-      debug:
-        msg: "{{ 'Swarm initialized' if swarm_init.changed else 'Swarm already active' }}"
-
-    # ── Copy stack file and deploy ────────────────────────────────────────
-    - name: 7. Copy Docker stack file to server
+    # ── Deploy Stack ──────────────────────────────────────────────────────
+    - name: 7. Copy docker-stack.yml to server
       copy:
         src: ../docker-stack.yml
         dest: ~/docker-stack.yml
         mode: '0644'
 
     - name: 8. Pull latest image from Docker Hub
-      command: docker pull {{ image_name }}:latest
+      command: docker pull {{ image_name }}
 
-    - name: 9. Deploy the LPG stack to Swarm
+    - name: 9. Deploy the LPG stack
       command: >
         docker stack deploy
         --compose-file ~/docker-stack.yml
@@ -78,14 +70,14 @@
         {{ stack_name }}
       environment:
         DOCKERHUB_USERNAME: "{{ dockerhub_username }}"
-        MONGO_URI: "{{ lookup('env', 'MONGO_URI') }}"
+        MONGO_URI: "{{ mongo_uri }}"
 
     # ── Verify ────────────────────────────────────────────────────────────
-    - name: 10. Check running services
+    - name: 10. Show running services
       command: docker service ls
       register: services
       changed_when: false
 
-    - name: Print service list
+    - name: Print running services
       debug:
         msg: "{{ services.stdout_lines }}"

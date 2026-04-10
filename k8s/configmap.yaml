@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: lpg-config
-  labels:
-    app: lpg-app
-data:
-  PORT: "3000"
-  NODE_ENV: "production"

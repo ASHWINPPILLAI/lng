@@ -10,23 +10,23 @@ env:
 
 jobs:
   build-push-deploy:
-    name: Build, Push to Docker Hub & Deploy to Render
+    name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
     environment: production
 
     steps:
-      # ── Step 1: Checkout code ──────────────────────────────────────────
+      # ── 1. Checkout source code ───────────────────────────────────────────
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # ── Step 2: Log in to Docker Hub ───────────────────────────────────
+      # ── 2. Log in to Docker Hub ───────────────────────────────────────────
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── Step 3: Build Docker image ─────────────────────────────────────
+      # ── 3. Build Docker image ─────────────────────────────────────────────
       - name: Build Docker Image
         run: |
           docker build \
@@ -34,15 +34,40 @@ jobs:
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             .
 
-      # ── Step 4: Push both tags to Docker Hub ───────────────────────────
+      # ── 4. Push both tags to Docker Hub ──────────────────────────────────
       - name: Push Image to Docker Hub
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "Image pushed: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
-      # ── Step 5: Trigger Render.com to pull new image and redeploy ──────
-      - name: Trigger Render Deploy
-        run: |
-          curl --silent --fail-with-body \
-            "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
-            && echo "✅ Render deployment triggered successfully"
+      # ── 5. Deploy to Docker Swarm via SSH ───────────────────────────────
+      - name: Deploy Stack to Docker Swarm
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SWARM_HOST }}
+          username: ${{ secrets.SWARM_USER }}
+          key: ${{ secrets.SWARM_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export MONGO_URI='${{ secrets.MONGO_URI }}'
+
+            docker stack deploy \
+              --compose-file ~/docker-stack.yml \
+              --with-registry-auth \
+              lpg-stack
+
+      # ── 6. Verify deployment ─────────────────────────────────────────────
+      - name: Verify Swarm Services
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SWARM_HOST }}
+          username: ${{ secrets.SWARM_USER }}
+          key: ${{ secrets.SWARM_SSH_KEY }}
+          script: |
+            echo "=== Active Services ==="
+            docker service ls
+            echo "=== Service Tasks ==="
+            docker service ps lpg-stack_lpg-app
