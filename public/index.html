@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart LPG | Management System</title>
+    <title>Dashboard | Smart LPG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -24,12 +24,12 @@
                 <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">DevOps Managed</p>
             </div>
             <nav class="flex-1 p-4 space-y-2">
-                <a href="#" class="block px-4 py-2 rounded-lg bg-blue-600 font-medium transition cursor-default">Dashboard</a>
-                <a href="#usage" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Usage History</a>
-                <a href="#refills" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Refill Dates</a>
+                <a href="index.html" class="block px-4 py-2 rounded-lg bg-blue-600 font-medium transition cursor-default">Dashboard</a>
+                <a href="usage.html" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Usage History</a>
+                <a href="refills.html" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Refill Dates</a>
             </nav>
             <div class="p-4 border-t border-slate-700 text-xs text-slate-500">
-                Version 1.2.0 • Swarm Cluster
+                Version 1.2.0 • Render Cloud
             </div>
         </aside>
 
@@ -60,7 +60,7 @@
                         <p class="text-sm text-slate-500 font-medium">Daily Average</p>
                         <h3 id="avgUsage" class="text-3xl font-bold mt-2">-- <span class="text-lg font-normal text-slate-400">kg</span></h3>
                         <div class="mt-4 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-blue-500 h-full w-2/3"></div>
+                            <div id="avgUsageBar" class="bg-blue-500 h-full w-0 transition-all duration-1000"></div>
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition hover:shadow-md">
@@ -75,33 +75,25 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Usage Chart Area -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <div id="usage" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                            <div class="flex items-center justify-between mb-8">
-                                <h3 class="text-xl font-bold">Daily Usage Trend</h3>
-                                <button onclick="toggleModal('usageModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-blue-200">Log Usage</button>
-                            </div>
-                            <div id="usageList" class="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar">
-                                <!-- Usage items go here -->
-                                <p class="text-slate-400 text-sm italic">Connect to database to see usage records...</p>
-                            </div>
+                <!-- Recent Activity Snippets -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold">Recent Usage</h3>
+                            <a href="usage.html" class="text-blue-600 text-sm font-bold hover:underline">View All &rarr;</a>
+                        </div>
+                        <div id="recentUsage" class="space-y-4">
+                            <p class="text-slate-400 text-sm italic">Loading recent logs...</p>
                         </div>
                     </div>
-
-                    <!-- Side Actions -->
-                    <div class="space-y-6">
-                        <div id="refills" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                            <h3 class="text-xl font-bold mb-6">Refill History</h3>
-                            <div id="refillList" class="space-y-4 mb-8">
-                                <!-- Refill items go here -->
-                                <p class="text-slate-400 text-sm italic">Loading refill history...</p>
-                            </div>
-                            <form id="refillForm" class="space-y-4">
-                                <input type="date" id="refillDate" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
-                                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white py-3 rounded-xl text-sm font-bold transition">Confirm Refill</button>
-                            </form>
+                    
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold">Latest Refills</h3>
+                            <a href="refills.html" class="text-blue-600 text-sm font-bold hover:underline">View All &rarr;</a>
+                        </div>
+                        <div id="recentRefills" class="space-y-4">
+                            <p class="text-slate-400 text-sm italic">Loading recent refills...</p>
                         </div>
                     </div>
                 </div>
@@ -109,34 +101,6 @@
         </main>
     </div>
 
-    <!-- Usage Modal -->
-    <div id="usageModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md p-8 rounded-3xl shadow-2xl relative">
-            <button onclick="toggleModal('usageModal')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <h3 class="text-2xl font-bold mb-2">New Consumption Log</h3>
-            <p class="text-slate-500 text-sm mb-8">Record the weight of gas consumed today.</p>
-            <form id="usageForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                    <input type="date" id="usageDate" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Amount (kg)</label>
-                    <input type="number" id="usageAmount" step="0.1" placeholder="e.g. 0.5" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold text-lg">
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg mt-4 transition shadow-xl shadow-blue-200">Save Record</button>
-            </form>
-        </div>
-    </div>
-
     <script src="app.js"></script>
-    <script>
-        function toggleModal(id) {
-            const el = document.getElementById(id);
-            el.classList.toggle('hidden');
-        }
-    </script>
 </body>
 </html>
