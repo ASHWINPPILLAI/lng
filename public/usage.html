@@ -8,103 +8,85 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
         .bg-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
     <div class="flex min-h-screen">
-        <!-- Sidebar -->
         <aside class="w-64 bg-gradient text-white hidden md:flex flex-col">
             <div class="p-6 border-b border-slate-700">
                 <h1 class="text-xl font-bold flex items-center gap-2">
                     <span class="bg-blue-600 p-2 rounded-lg text-white">LPG</span>
                     Smart LPG
                 </h1>
-                <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">DevOps Managed</p>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <a href="index.html" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Dashboard</a>
-                <a href="usage.html" class="block px-4 py-2 rounded-lg bg-blue-600 font-medium transition">Usage History</a>
+                <a href="usage.html" class="block px-4 py-2 rounded-lg bg-blue-600 font-medium transition cursor-default">Usage History</a>
                 <a href="refills.html" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Refill Dates</a>
             </nav>
-            <div class="p-4 border-t border-slate-700 text-xs text-slate-500">
-                Version 1.2.0 • Render Cloud
-            </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 flex flex-col">
             <header class="h-16 border-b bg-white flex items-center justify-between px-8">
-                <h2 class="font-semibold text-lg">Consumption Logs</h2>
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleModal('usageModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Log New Usage</button>
-                    <div class="h-8 w-px bg-slate-200"></div>
-                    <span id="totalMonthlyUsage" class="text-xs font-bold text-slate-500 uppercase">Monthly: -- kg</span>
-                </div>
+                <h2 class="font-semibold text-lg text-slate-500">History / <span class="text-slate-900">Consumption Logs</span></h2>
+                <button onclick="toggleModal('usageModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-blue-200 transition">Log Consumption</button>
             </header>
 
-            <div class="p-8 max-w-7xl mx-auto w-full">
-                <!-- Data Table Area -->
+            <div class="p-8 max-w-7xl mx-auto w-full space-y-8">
+                <!-- Summary Card -->
+                <div class="bg-blue-600 rounded-3xl p-8 text-white shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm font-medium uppercase tracking-widest">Aggregate Data</p>
+                        <h3 id="totalMonthlyUsage" class="text-3xl font-bold mt-1">Total Consumed: -- kg</h3>
+                    </div>
+                    <div class="bg-white/10 p-4 rounded-2xl">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                </div>
+
+                <!-- Table -->
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-                        <h3 class="font-bold text-lg text-slate-800">Usage Records</h3>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-widest">
-                                <tr>
-                                    <th class="px-8 py-4">Date</th>
-                                    <th class="px-8 py-4">Amount (kg)</th>
-                                    <th class="px-8 py-4">Status</th>
-                                    <th class="px-8 py-4 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usageTableBody" class="divide-y divide-slate-50 text-sm">
-                                <!-- Records will be injected here -->
-                                <tr>
-                                    <td colspan="4" class="px-8 py-20 text-center text-slate-400 italic">Connecting to LPG database...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                            <tr>
+                                <th class="px-8 py-5 border-b">Date</th>
+                                <th class="px-8 py-5 border-b">Consumption</th>
+                                <th class="px-8 py-5 border-b">Status</th>
+                                <th class="px-8 py-5 border-b text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usageTableBody">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Usage Modal -->
+    <!-- Modal -->
     <div id="usageModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white w-full max-w-md p-8 rounded-3xl shadow-2xl relative">
-            <button onclick="toggleModal('usageModal')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+            <button onclick="toggleModal('usageModal')" class="absolute top-6 right-6 text-slate-400">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <h3 class="text-2xl font-bold mb-2">New Consumption Log</h3>
-            <p class="text-slate-500 text-sm mb-8">Record the weight of gas consumed today.</p>
-            <form id="usageForm" class="space-y-4">
+            <h3 class="text-2xl font-bold mb-6">Log Consumption</h3>
+            <form id="usageForm" class="space-y-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                    <input type="date" id="usageDate" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Select Date</label>
+                    <input type="date" id="usageDate" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Amount (kg)</label>
-                    <input type="number" id="usageAmount" step="0.1" placeholder="e.g. 0.5" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold text-lg">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Usage Amount (kg)</label>
+                    <input type="number" id="usageAmount" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 transition text-lg font-bold">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg mt-4 transition">Save Record</button>
+                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition">Save Log</button>
             </form>
         </div>
     </div>
 
     <script src="app.js"></script>
-    <script>
-        function toggleModal(id) {
-            const el = document.getElementById(id);
-            el.classList.toggle('hidden');
-        }
-    </script>
+    <script>function toggleModal(id){document.getElementById(id).classList.toggle('hidden')}</script>
 </body>
 </html>

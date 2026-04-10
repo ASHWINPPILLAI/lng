@@ -3,82 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Refill Tracking | Smart LPG</title>
+    <title>Refill Dates | Smart LPG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
         .bg-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
     <div class="flex min-h-screen">
-        <!-- Sidebar -->
         <aside class="w-64 bg-gradient text-white hidden md:flex flex-col">
             <div class="p-6 border-b border-slate-700">
                 <h1 class="text-xl font-bold flex items-center gap-2">
                     <span class="bg-blue-600 p-2 rounded-lg text-white">LPG</span>
                     Smart LPG
                 </h1>
-                <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">DevOps Managed</p>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <a href="index.html" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Dashboard</a>
                 <a href="usage.html" class="block px-4 py-2 rounded-lg hover:bg-slate-800 text-slate-300 transition">Usage History</a>
-                <a href="refills.html" class="block px-4 py-2 rounded-lg bg-blue-600 font-medium transition">Refill Dates</a>
+                <a href="refills.html" class="block px-4 py-2 rounded-lg bg-blue-600 font-medium transition cursor-default">Refill Dates</a>
             </nav>
-            <div class="p-4 border-t border-slate-700 text-xs text-slate-500">
-                Version 1.2.0 • Render Cloud
-            </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 flex flex-col">
             <header class="h-16 border-b bg-white flex items-center justify-between px-8">
-                <h2 class="font-semibold text-lg">Refill Management</h2>
-                <div class="flex items-center gap-4">
-                    <span id="refillFrequency" class="text-xs font-bold text-slate-500 uppercase">Avg Frequency: -- days</span>
-                </div>
+                <h2 class="font-semibold text-lg text-slate-500">History / <span class="text-slate-900">Refill Dates</span></h2>
             </header>
 
-            <div class="p-8 space-y-8 max-w-7xl mx-auto w-full">
+            <div class="p-8 max-w-7xl mx-auto w-full space-y-8">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Refill List -->
-                    <div class="lg:col-span-2">
+                    <!-- Analytics -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-emerald-600 rounded-3xl p-8 text-white shadow-xl flex items-center justify-between">
+                            <div>
+                                <p class="text-emerald-100 text-sm font-medium uppercase tracking-widest">Analytics</p>
+                                <h3 id="refillFrequency" class="text-3xl font-bold mt-1">Avg Frequency: -- days</h3>
+                            </div>
+                            <div class="bg-white/10 p-4 rounded-2xl border border-white/20">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                        </div>
+
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                            <div class="p-6 border-b border-slate-50">
-                                <h3 class="font-bold text-lg text-slate-800">Refill History</h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left">
-                                    <thead class="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-widest">
-                                        <tr>
-                                            <th class="px-8 py-4">Refill Date</th>
-                                            <th class="px-8 py-4">Days Since Previous</th>
-                                            <th class="px-8 py-4 text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="refillTableBody" class="divide-y divide-slate-50 text-sm">
-                                        <tr>
-                                            <td colspan="3" class="px-8 py-20 text-center text-slate-400 italic">No refill history found...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                                    <tr>
+                                        <th class="px-8 py-5 border-b">Refill Date</th>
+                                        <th class="px-8 py-5 border-b">Interval (Days)</th>
+                                        <th class="px-8 py-5 border-b text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="refillTableBody">
+                                    <!-- Injected -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <!-- Add Refill Form -->
+                    <!-- Add Form -->
                     <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 h-fit sticky top-8">
-                        <h3 class="text-xl font-bold mb-2">New Refill</h3>
-                        <p class="text-slate-500 text-sm mb-8">Record a cylinder replacement.</p>
-                        <form id="refillForm" class="space-y-4">
+                        <h3 class="text-xl font-bold mb-2">Log New Refill</h3>
+                        <p class="text-slate-400 text-sm mb-8">Record when you changed your LPG cylinder.</p>
+                        <form id="refillForm" class="space-y-6">
                             <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                                <input type="date" id="refillDate" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Refill Date</label>
+                                <input type="date" id="refillDate" required class="w-full px-4 py-4 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 transition">
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-xl font-bold text-sm transition">Log Refill</button>
+                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg transition hover:scale-[1.02]">Confirm Refill</button>
                         </form>
                     </div>
                 </div>
