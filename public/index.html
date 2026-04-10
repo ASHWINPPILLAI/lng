@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart LPG Management Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: "#eef7ff", 100: "#d9edff", 500: "#2563eb", 600: "#1d4ed8", 700: "#1e40af", 900: "#0f172a" }
+          },
+          boxShadow: { soft: "0 10px 30px rgba(15, 23, 42, 0.08)" }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <div class="flex min-h-screen">
+    <aside class="hidden w-72 flex-col bg-slate-900 text-white lg:flex">
+      <div class="border-b border-slate-800 px-8 py-8">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500 font-bold shadow-lg">LPG</div>
+          <div><p class="text-lg font-semibold">Smart LPG</p><p class="text-sm text-slate-400">Management System</p></div>
+        </div>
+      </div>
+      <nav class="flex-1 px-5 py-8">
+        <p class="px-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Navigation</p>
+        <div class="mt-4 space-y-2">
+          <a href="#overview" class="flex items-center rounded-2xl bg-slate-800 px-4 py-3 text-sm font-medium text-white">Dashboard Overview</a>
+          <a href="#refill-history" class="flex items-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white">Refill History</a>
+          <a href="#usage-history" class="flex items-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white">Usage Records</a>
+        </div>
+      </nav>
+    </aside>
+    <div class="flex-1">
+      <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Welcome back</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">LPG Analytics Dashboard</h1>
+          </div>
+          <button id="openUsageModalButton" class="inline-flex items-center rounded-2xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700">Add Daily Usage</button>
+        </div>
+      </header>
+      <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section id="overview" class="space-y-6">
+          <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+              <p class="text-sm font-medium text-slate-500">Current Usage</p>
+              <p id="currentUsageCard" class="mt-4 text-3xl font-bold text-slate-900">-- kg</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+              <p class="text-sm font-medium text-slate-500">Average Daily Usage</p>
+              <p id="averageUsageCard" class="mt-4 text-3xl font-bold text-slate-900">-- kg</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+              <p class="text-sm font-medium text-slate-500">Estimated Next Refill</p>
+              <p id="estimatedDateCard" class="mt-4 text-3xl font-bold text-slate-900">--</p>
+            </div>
+            <div class="rounded-3xl bg-gradient-to-br from-brand-600 to-slate-900 p-6 text-white shadow-soft">
+              <p class="text-sm font-medium text-slate-200">Days Until Next Refill</p>
+              <p id="daysRemainingCard" class="mt-4 text-3xl font-bold">-- days</p>
+            </div>
+          </div>
+        </section>
+        <section id="refill-history" class="mt-10 grid gap-6 xl:grid-cols-[1.7fr_1fr]">
+          <div class="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+            <h3 class="mt-2 text-xl font-bold text-slate-900">Refill History</h3>
+            <div class="mt-6 overflow-hidden rounded-2xl border border-slate-200">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Refill Date</th>
+                  </tr>
+                </thead>
+                <tbody id="refillTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+            <h3 class="mt-2 text-xl font-bold text-slate-900">Add Refill Date</h3>
+            <form id="refillForm" class="mt-6 space-y-4">
+              <input id="refillDate" type="date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100" />
+              <button type="submit" class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Save Refill Date</button>
+              <p id="refillMessage" class="text-sm"></p>
+            </form>
+          </div>
+        </section>
+        <section id="usage-history" class="mt-10 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+          <h3 class="mt-2 text-xl font-bold text-slate-900">Daily Usage History</h3>
+          <div id="usageHistoryGrid" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <div id="usageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 px-4">
+    <div class="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+      <div class="flex items-start justify-between gap-4">
+        <h3 class="mt-2 text-2xl font-bold text-slate-900">Add Daily Gas Usage</h3>
+        <button id="closeUsageModalButton" class="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200">Close</button>
+      </div>
+      <form id="usageForm" class="mt-6 space-y-4">
+        <input id="usageDate" type="date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100" />
+        <input id="usageAmount" type="number" min="0" step="0.1" required placeholder="Gas Used (kg)" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100" />
+        <button type="submit" class="w-full rounded-2xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Save Usage Record</button>
+        <p id="usageMessage" class="text-sm"></p>
+      </form>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

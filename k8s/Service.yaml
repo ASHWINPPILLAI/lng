@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lpg-service
+  labels:
+    app: lpg-app
+spec:
+  type: LoadBalancer
+  selector:
+    app: lpg-app
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 3000
