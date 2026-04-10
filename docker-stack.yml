@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  lpg-app:
+    image: ${DOCKERHUB_USERNAME}/lpg-app:latest
+    ports:
+      - "80:3000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - PORT=3000
+      - NODE_ENV=production
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first          # start new before stopping old = zero downtime
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.50'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  default:
+    driver: overlay

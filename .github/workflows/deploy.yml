@@ -7,10 +7,11 @@ on:
 
 env:
   IMAGE_NAME: lpg-app
+  STACK_NAME: lpg-stack
 
 jobs:
-  build-and-deploy:
-    name: Build, Push to Docker Hub & Deploy
+  build-push-deploy:
+    name: Build, Push to Docker Hub & Deploy via Swarm
     runs-on: ubuntu-latest
     environment: production
 
@@ -35,14 +36,41 @@ jobs:
             .
 
       # ── Step 4: Push both tags to Docker Hub ───────────────────────────
-      - name: Push Docker Image to Docker Hub
+      - name: Push Image to Docker Hub
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      # ── Step 5: Trigger Render.com auto-deploy via webhook ─────────────
-      - name: Trigger Render Deploy
-        run: |
-          curl -s --fail "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
-            -o /dev/null && echo "Deploy triggered successfully" \
-            || echo "Deploy hook not set — skipping"
+      # ── Step 5: SSH into Swarm manager and deploy the stack ────────────
+      - name: Deploy Stack to Docker Swarm
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SWARM_HOST }}
+          username: ${{ secrets.SWARM_USER }}
+          key: ${{ secrets.SWARM_SSH_KEY }}
+          script: |
+            # Pull the latest image on the Swarm manager
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+            # Export env vars for the stack file
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export MONGO_URI='${{ secrets.MONGO_URI }}'
+
+            # Deploy (or update) the stack — Swarm handles rolling update automatically
+            docker stack deploy \
+              --compose-file ~/docker-stack.yml \
+              --with-registry-auth \
+              ${{ env.STACK_NAME }}
+
+      # ── Step 6: Verify the service is running ──────────────────────────
+      - name: Verify Swarm Service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SWARM_HOST }}
+          username: ${{ secrets.SWARM_USER }}
+          key: ${{ secrets.SWARM_SSH_KEY }}
+          script: |
+            echo "=== Running Services ==="
+            docker service ls
+            echo "=== Service Tasks ==="
+            docker service ps ${{ env.STACK_NAME }}_lpg-app --no-trunc
